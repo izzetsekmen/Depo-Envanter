@@ -3,21 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boyner Depo Envanter</title>
+    <title>Depo Envanter</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        
-        /* Mobil cihazlarda tabloyu gizle, kartları göster */
-        @media (max-width: 768px) {
-            .desktop-table { display: none; }
-            .mobile-cards { display: block; }
-        }
-        @media (min-width: 769px) {
-            .desktop-table { display: block; }
-            .mobile-cards { display: none; }
-        }
+        @media (max-width: 768px) { .desktop-table { display: none; } .mobile-cards { display: block; } }
+        @media (min-width: 769px) { .desktop-table { display: block; } .mobile-cards { display: none; } }
     </style>
 </head>
 <body class="p-2 md:p-10">
@@ -30,8 +22,8 @@
             <div class="flex flex-col md:flex-row gap-2 max-w-2xl mx-auto mt-4">
                 <input type="text" id="searchInput" onkeyup="if(event.keyCode===13) search()" 
                        placeholder="Stok kodu veya barkod..." 
-                       class="flex-1 border-2 border-gray-100 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all shadow-inner text-lg">
-                <button onclick="search()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-700 active:scale-95 transition-all shadow-md">ARA</button>
+                       class="flex-1 border-2 border-gray-100 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all shadow-inner text-lg text-center md:text-left">
+                <button onclick="search()" class="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-700 shadow-md">ARA</button>
             </div>
         </div>
 
@@ -47,36 +39,26 @@
                     </tr>
                 </thead>
                 <tbody id="resultTable" class="divide-y divide-gray-100">
-                    <tr><td colspan="5" class="p-20 text-center text-gray-400 italic">Arama yapın...</td></tr>
+                    <tr><td colspan="5" class="p-20 text-center text-gray-400 italic font-medium">Arama yapın...</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <div id="mobileCards" class="mobile-cards space-y-4">
-            </div>
+        <div id="mobileCards" class="mobile-cards space-y-4"></div>
     </div>
 
     <script>
         let inventory = [];
-
-        fetch('data.json')
-            .then(res => res.json())
-            .then(data => { inventory = data; })
-            .catch(err => console.error("Veri yüklenemedi!"));
+        fetch('data.json').then(res => res.json()).then(data => { inventory = data; });
 
         function search() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
             const table = document.getElementById('resultTable');
             const mobileContainer = document.getElementById('mobileCards');
-            
             if (!query) return;
 
-            const filtered = inventory.filter(item => {
-                return Object.values(item).some(val => String(val).toLowerCase().includes(query));
-            });
-
-            table.innerHTML = "";
-            mobileContainer.innerHTML = "";
+            const filtered = inventory.filter(item => Object.values(item).some(val => String(val).toLowerCase().includes(query)));
+            table.innerHTML = ""; mobileContainer.innerHTML = "";
 
             if (filtered.length === 0) {
                 const noResult = '<tr><td colspan="5" class="p-10 text-center text-red-500 font-bold">⚠️ Ürün bulunamadı.</td></tr>';
@@ -86,40 +68,38 @@
             }
 
             filtered.forEach(item => {
-                // Dinamik veri çekme (Başlık isminden bağımsız)
-                const getV = (part) => {
-                    const key = Object.keys(item).find(k => k.toLowerCase().replace(/\s/g, '').includes(part.toLowerCase()));
+                const getV = (parts) => {
+                    const key = Object.keys(item).find(k => parts.some(p => k.toLowerCase().replace(/\s/g, '').includes(p)));
                     return key ? item[key] : "-";
                 };
 
-                const sKodu = getV("stokkodu") || getV("kodu");
-                const sTanim = getV("tanım") || getV("stokadı");
-                const barkod = getV("barkod");
-                const bolum = getV("bölüm") || "";
-                const alan = getV("alan") || "";
-                const adet = getV("adet") || getV("say.adet") || "0";
+                // Başlıkları daha geniş kapsamlı arıyoruz
+                const sKodu = getV(["stokkodu", "kodu", "stokno"]);
+                const sTanim = getV(["stoktanımı", "tanımı", "stokadı", "urunadi"]);
+                const barkod = getV(["barkod"]);
+                const bolum = getV(["bölüm"]);
+                const alan = getV(["alan"]);
+                const adet = getV(["adet", "sayadet", "miktar"]) || "0";
 
-                // Masaüstü Satırı
                 table.innerHTML += `
                     <tr class="hover:bg-blue-50 transition-all font-medium text-gray-700">
                         <td class="p-5 font-bold text-blue-700 text-sm">${sKodu}</td>
                         <td class="p-5 text-sm">${sTanim}</td>
                         <td class="p-5 text-xs text-gray-400 font-mono">${barkod}</td>
-                        <td class="p-5 text-xs text-blue-500 italic">${bolum} / ${alan}</td>
+                        <td class="p-5 text-xs text-blue-500 italic font-semibold">${bolum} / ${alan}</td>
                         <td class="p-5 font-black text-center text-lg ${parseInt(adet) > 0 ? 'text-green-600' : 'text-red-500'}">${adet}</td>
                     </tr>`;
 
-                // Mobil Kartı
                 mobileContainer.innerHTML += `
                     <div class="bg-white p-5 rounded-3xl shadow-md border-l-8 ${parseInt(adet) > 0 ? 'border-green-500' : 'border-red-500'}">
                         <div class="flex justify-between items-start mb-3">
-                            <span class="text-blue-700 font-black text-lg">${sKodu}</span>
+                            <span class="text-blue-700 font-black text-lg leading-tight">${sKodu}</span>
                             <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full font-black text-sm">Adet: ${adet}</span>
                         </div>
                         <p class="text-gray-800 font-bold text-sm mb-3">${sTanim}</p>
                         <div class="grid grid-cols-2 gap-2 pt-3 border-t border-gray-50 text-[11px] font-bold text-gray-400 uppercase">
-                            <div>Barkod: <span class="block text-gray-600 font-mono">${barkod}</span></div>
-                            <div>Konum: <span class="block text-blue-500">${bolum} / ${alan}</span></div>
+                            <div>Barkod: <span class="block text-gray-600 font-mono mt-1">${barkod}</span></div>
+                            <div>Konum: <span class="block text-blue-500 mt-1">${bolum} / ${alan}</span></div>
                         </div>
                     </div>`;
             });
