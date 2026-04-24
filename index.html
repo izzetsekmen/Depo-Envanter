@@ -12,19 +12,16 @@
 </head>
 <body class="p-4 md:p-10">
     <div class="max-w-7xl mx-auto">
-        
         <div class="bg-white p-8 rounded-3xl shadow-lg border-b-4 border-blue-600 mb-8 text-center">
             <div class="inline-block bg-blue-600 p-4 rounded-2xl shadow-md mb-4">
                 <span class="text-4xl">📦</span>
             </div>
             <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Depo Envanter Sorgulama</h1>
-            <p class="text-gray-500 mb-6 text-sm">Stok kodu, barkod veya tanım ile arama yapın.</p>
-            
-            <div class="flex flex-col md:flex-row gap-3 max-w-3xl mx-auto">
+            <div class="flex flex-col md:flex-row gap-3 max-w-3xl mx-auto mt-6">
                 <input type="text" id="searchInput" onkeyup="if(event.keyCode===13) search()" 
                        placeholder="Aramaya başlayın..." 
                        class="flex-1 border-2 border-gray-100 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all shadow-inner">
-                <button onclick="search()" class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-md">ARA</button>
+                <button onclick="search()" class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-bold hover:bg-blue-700 shadow-md">ARA</button>
             </div>
         </div>
 
@@ -43,7 +40,7 @@
                         </tr>
                     </thead>
                     <tbody id="resultTable" class="divide-y divide-gray-100 bg-white">
-                        <tr><td colspan="7" class="p-20 text-center text-gray-400 italic">Sonuçlar burada listelenecek...</td></tr>
+                        <tr><td colspan="7" class="p-20 text-center text-gray-400 italic">Sonuçları görmek için arama yapın.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -69,25 +66,22 @@
 
             table.innerHTML = "";
             if (filtered.length === 0) {
-                table.innerHTML = '<tr><td colspan="7" class="p-20 text-center text-red-500 font-bold text-lg">⚠️ Ürün bulunamadı.</td></tr>';
+                table.innerHTML = '<tr><td colspan="7" class="p-20 text-center text-red-500 font-bold">⚠️ Ürün bulunamadı.</td></tr>';
                 return;
             }
 
             filtered.forEach(item => {
-                // Başlıkları bulma fonksiyonu (Yine akıllıca her şeyi tarar)
-                const getVal = (keyPart) => {
-                    const foundKey = Object.keys(item).find(k => k.toLowerCase().includes(keyPart.toLowerCase()));
-                    return foundKey ? item[foundKey] : "-";
-                };
-
-                const sKodu = getVal("stok kodu") || getVal("kodu");
-                const sTanim = getVal("stok tanımı") || getVal("tanımı");
-                const bKod = getVal("barkod");
-                const lok = getVal("lokasyon");
-                const marka = getVal("marka");
-                const adet = getVal("say.adet") || getVal("adet") || "0";
-                const bolum = getVal("bölüm") || "";
-                const alan = getVal("alan") || "";
+                // Sütun ismi ne olursa olsun, sırasına göre alıyoruz (0, 1, 2, 3...)
+                const v = Object.values(item);
+                
+                // Senin JSON yapındaki sıraya göre tahmin (Bölüm, Alan, Lokasyon, Barkod, StokKodu, StokTanımı...)
+                const sKodu = v[4] || "-";
+                const sTanim = v[5] || "-";
+                const bKod = v[3] || "-";
+                const lok = v[2] || "-";
+                const bolumAlan = `${v[0] || "-"} / ${v[1] || "-"}`;
+                const marka = v[7] || "-";
+                const adet = v[8] || "0";
 
                 table.innerHTML += `
                     <tr class="hover:bg-blue-50 transition-all border-b border-gray-50">
@@ -95,7 +89,7 @@
                         <td class="p-5 font-semibold text-gray-700">${sTanim}</td>
                         <td class="p-5 text-gray-400 text-sm font-mono">${bKod}</td>
                         <td class="p-5"><span class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-black border border-gray-200">${lok}</span></td>
-                        <td class="p-5 text-sm font-medium text-blue-600 uppercase italic tracking-tighter">${bolum} / ${alan}</td>
+                        <td class="p-5 text-sm font-medium text-blue-500 uppercase italic tracking-tighter">${bolumAlan}</td>
                         <td class="p-5 text-sm font-medium text-gray-600">${marka}</td>
                         <td class="p-5 font-black text-center text-lg ${parseInt(adet) > 0 ? 'text-green-600' : 'text-red-500'}">${adet}</td>
                     </tr>`;
