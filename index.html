@@ -13,7 +13,14 @@
 <body class="p-4 md:p-10">
     <div class="max-w-7xl mx-auto">
         <div class="bg-white p-8 rounded-3xl shadow-lg border-b-4 border-blue-600 mb-8 text-center">
-            <h1 class="text-3xl font-extrabold text-gray-800 mb-2">📦 Depo Envanter Sistemi</h1>
+            
+            <div class="flex items-center justify-center gap-4 mb-4">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Boyner_logo.svg/1024px-Boyner_logo.svg.png" 
+                     alt="Boyner Logo" 
+                     class="h-10 w-auto">
+                <h1 class="text-3xl font-extrabold text-gray-800">Depo Envanter Sistemi</h1>
+            </div>
+            
             <p class="text-gray-500 mb-6 text-sm">Hızlı sorgulama için stok kodu veya barkod giriniz.</p>
             <div class="flex flex-col md:flex-row gap-3 max-w-3xl mx-auto">
                 <input type="text" id="searchInput" onkeyup="if(event.keyCode===13) search()" 
@@ -32,7 +39,7 @@
                             <th class="p-5">Stok Tanımı</th>
                             <th class="p-5">Barkod</th>
                             <th class="p-5">Lokasyon</th>
-                            <th class="p-5">Bölüm / Alan</th>
+                            <th class="p-5 text-blue-300">Bölüm / Alan</th>
                             <th class="p-5">Marka</th>
                             <th class="p-5 text-center">Adet</th>
                         </tr>
@@ -82,8 +89,11 @@
                 const lokasyon = findVal("lokasyon") || "-";
                 const marka = findVal("marka") || "-";
                 const adet = findVal("say.adet") || findVal("adet") || "0";
-                const bolum = findVal("bölüm") || "";
-                const alan = findVal("alan") || "";
+                
+                // Bölüm ve Alan Verilerini Bulup Birleştiriyoruz
+                const bolum = findVal("bölüm adı") || findVal("bölüm") || "-";
+                const alan = findVal("alan adı") || findVal("alan") || "-";
+                const bolumAlan = `${bolum} / ${alan}`;
 
                 table.innerHTML += `
                     <tr class="hover:bg-blue-50 transition-all border-b border-gray-50">
@@ -91,7 +101,7 @@
                         <td class="p-5 font-semibold text-gray-700">${stokTanimi}</td>
                         <td class="p-5 text-gray-400 text-sm font-mono">${barkod}</td>
                         <td class="p-5"><span class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-black border border-gray-200">${lokasyon}</span></td>
-                        <td class="p-5 text-sm font-medium text-blue-500 italic">${bolum} / ${alan}</td>
+                        <td class="p-5 text-sm font-medium text-blue-500 uppercase tracking-tighter">${bolumAlan}</td>
                         <td class="p-5 text-sm font-medium text-gray-600">${marka}</td>
                         <td class="p-5 font-black text-center text-lg ${parseInt(adet) > 0 ? 'text-green-600' : 'text-red-500'}">${adet}</td>
                     </tr>`;
