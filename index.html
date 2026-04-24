@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Depo Envanter Sistemi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-200">
+            <div class="flex items-center gap-4 mb-6">
+                <div class="bg-blue-600 text-white p-3 rounded-lg text-2xl">📦</div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Depo Envanter Sorgulama</h1>
+                    <p class="text-sm text-gray-500">Stok kodu, Barkod veya Stok Tanımı ile arama yapın.</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row gap-3">
+                <input type="text" id="searchInput" 
+                       onkeyup="if(event.keyCode === 13) search()"
+                       placeholder="Aramak istediğiniz ürünü yazın ve Enter'a basın..." 
+                       class="flex-1 border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                <button onclick="search()" 
+                        class="bg-blue-600 text-white px-10 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                    Ara
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-xs uppercase tracking-wider">
+                            <th class="p-4 font-bold">Stok Kodu</th>
+                            <th class="p-4 font-bold">Stok Tanımı</th>
+                            <th class="p-4 font-bold">Barkod</th>
+                            <th class="p-4 font-bold">Lokasyon</th>
+                            <th class="p-4 font-bold">Bölüm / Alan</th>
+                            <th class="p-4 font-bold">Marka</th>
+                            <th class="p-4 font-bold">Adet</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultTable" class="text-gray-700 divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="7" class="p-12 text-center text-gray-400 italic">
+                                Henüz bir arama yapmadınız. Başlamak için yukarıdaki kutuyu kullanın.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let inventory = [];
+
+        // data.json dosyasından verileri çekiyoruz
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                inventory = data;
+                console.log("Veri başarıyla yüklendi!");
+            })
+            .catch(err => {
+                console.error("Hata: Veri dosyası yüklenemedi!", err);
+            });
+
+        function search() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const table = document.getElementById('resultTable');
+            
+            if (query === "") {
+                table.innerHTML = '<tr><td colspan="7" class="p-12 text-center text-gray-400 italic">Lütfen bir arama terimi girin.</td></tr>';
+                return;
+            }
+
+            // Senin Excel başlıklarına göre filtreleme yapıyoruz
+            const filtered = inventory.filter(item => {
+                const stokKodu = String(item["Stok Kodu"] || "").toLowerCase();
+                const barkod = String(item["Barkod"] || "").toLowerCase();
+                const stokTanimi = String(item["Stok Tanımı"] || "").toLowerCase();
+                
+                return stokKodu.includes(query) || barkod.includes(query) || stokTanimi.includes(query);
+            });
+
+            table.innerHTML = "";
+
+            if (filtered.length === 0) {
+                table.innerHTML = '<tr><td colspan="7" class="p-12 text-center text-red-400 font-semibold">Aradığınız kriterlere uygun ürün bulunamadı.</td></tr>';
+                return;
+            }
+
+            filtered.forEach(item => {
+                table.innerHTML += `
+                    <tr class="hover:bg-blue-50 transition-colors border-b border-gray-50">
+                        <td class="p-4 font-bold text-blue-700">${item["Stok Kodu"] || '-'}</td>
+                        <td class="p-4 font-medium">${item["Stok Tanımı"] || '-'}</td>
+                        <td class="p-4 text-sm text-gray-500">${item["Barkod"] || '-'}</td>
+                        <td class="p-4"><span class="bg-gray-100 px-2 py-1 rounded text-xs font-bold">${item["Lokasyon"] || '-'}</span></td>
+                        <td class="p-4 text-xs text-gray-500">${item["Bölüm Adı"] || '-'} / ${item["Alan Adı"] || '-'}</td>
+                        <td class="p-4 text-sm">${item["Marka"] || '-'}</td>
+                        <td class="p-4 font-bold ${parseInt(item["Say.Adet"]) > 0 ? 'text-green-600' : 'text-red-600'}">${item["Say.Adet"] || '0'}</td>
+                    </tr>`;
+            });
+        }
+    </script>
+</body>
+</html>
