@@ -7,26 +7,27 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f9fafb; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
     </style>
 </head>
 <body class="p-4 md:p-10">
-    <div class="max-w-6xl mx-auto">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border mb-8 text-center">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">📦 Depo Envanter</h1>
-            <div class="flex flex-col md:flex-row gap-2 mt-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="bg-white p-8 rounded-3xl shadow-lg border-b-4 border-blue-600 mb-8 text-center">
+            <h1 class="text-3xl font-extrabold text-gray-800 mb-2">📦 Depo Envanter Sistemi</h1>
+            <p class="text-gray-500 mb-6 text-sm">Hızlı sorgulama için stok kodu veya barkod giriniz.</p>
+            <div class="flex flex-col md:flex-row gap-3 max-w-3xl mx-auto">
                 <input type="text" id="searchInput" onkeyup="if(event.keyCode===13) search()" 
-                       placeholder="Stok kodu veya barkod yazın..." 
-                       class="flex-1 border p-4 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none shadow-sm">
-                <button onclick="search()" class="bg-blue-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-blue-700 transition-all">Ara</button>
+                       placeholder="Aramaya başlayın..." 
+                       class="flex-1 border-2 border-gray-200 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all shadow-inner">
+                <button onclick="search()" class="bg-blue-600 text-white px-12 py-4 rounded-2xl font-bold hover:bg-blue-700 active:scale-95 transition-all shadow-md">ARA</button>
             </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm border overflow-hidden">
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-gray-50 border-b">
-                        <tr class="text-gray-600 text-sm font-bold uppercase">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-800 text-white">
+                        <tr class="text-xs uppercase tracking-wider">
                             <th class="p-5">Stok Kodu</th>
                             <th class="p-5">Stok Tanımı</th>
                             <th class="p-5">Barkod</th>
@@ -35,8 +36,8 @@
                             <th class="p-5 text-center">Adet</th>
                         </tr>
                     </thead>
-                    <tbody id="resultTable" class="divide-y divide-gray-100">
-                        <tr><td colspan="6" class="p-20 text-center text-gray-400 italic">Sonuçları görmek için arama yapın.</td></tr>
+                    <tbody id="resultTable" class="divide-y divide-gray-100 bg-white">
+                        <tr><td colspan="6" class="p-20 text-center text-gray-400 italic font-medium text-lg">Arama yaparak sonuçları listeleyin...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -48,7 +49,10 @@
 
         fetch('data.json')
             .then(res => res.json())
-            .then(data => { inventory = data; })
+            .then(data => { 
+                inventory = data; 
+                console.log("Sistem Hazır!");
+            })
             .catch(err => alert("Veri yüklenemedi! data.json dosyasını kontrol et."));
 
         function search() {
@@ -56,37 +60,39 @@
             const table = document.getElementById('resultTable');
             if (!query) return;
 
+            // Herhangi bir sütunda eşleşme ara
             const filtered = inventory.filter(item => {
                 return Object.values(item).some(val => String(val).toLowerCase().includes(query));
             });
 
             table.innerHTML = "";
             if (filtered.length === 0) {
-                table.innerHTML = '<tr><td colspan="6" class="p-20 text-center text-red-500">❌ Ürün bulunamadı.</td></tr>';
+                table.innerHTML = '<tr><td colspan="6" class="p-20 text-center text-red-500 font-bold text-xl">⚠️ Ürün Bulunamadı!</td></tr>';
                 return;
             }
 
             filtered.forEach(item => {
-                // SÜTUN İSMİNDEN BAĞIMSIZ VERİ ÇEKME MANTIĞI:
-                // Excel'deki sıraya göre (0: Bölüm, 1: Alan, 2: Lokasyon, 3: Barkod, 4: Stok Kodu, 5: Stok Tanımı...)
-                const vals = Object.values(item);
-                
-                // Senin paylaştığın sıraya göre eşleştirme:
-                const lokasyon = item["Lokasyon"] || vals[2] || "-";
-                const barkod = item["Barkod"] || vals[3] || "-";
-                const stokKodu = item["Stok Kodu"] || vals[4] || "-";
-                const stokTanimi = item["Stok Tanımı"] || vals[5] || "-";
-                const marka = item["Marka"] || vals[7] || "-";
-                const adet = item["Say.Adet"] || vals[8] || "0";
+                // AKILLI EŞLEŞTİRME: Sütun ismine göre değil, içinde geçen kelimeye göre bulur
+                const findVal = (keyPart) => {
+                    const key = Object.keys(item).find(k => k.toLowerCase().includes(keyPart.toLowerCase()));
+                    return key ? item[key] : null;
+                };
+
+                const stokKodu = findVal("stok kodu") || findVal("kodu") || "-";
+                const stokTanimi = findVal("stok tanımı") || findVal("tanımı") || findVal("ad") || "-";
+                const barkod = findVal("barkod") || "-";
+                const lokasyon = findVal("lokasyon") || "-";
+                const marka = findVal("marka") || "-";
+                const adet = findVal("say.adet") || findVal("adet") || "0";
 
                 table.innerHTML += `
-                    <tr class="hover:bg-blue-50 transition-colors">
-                        <td class="p-5 font-bold text-blue-700">${stokKodu}</td>
-                        <td class="p-5 font-semibold text-gray-800">${stokTanimi}</td>
-                        <td class="p-5 text-gray-500 text-sm font-mono">${barkod}</td>
-                        <td class="p-5"><span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-lg text-xs font-bold">${lokasyon}</span></td>
-                        <td class="p-5 text-sm text-gray-600">${marka}</td>
-                        <td class="p-5 font-black text-center ${parseInt(adet) > 0 ? 'text-green-600' : 'text-red-500'}">${adet}</td>
+                    <tr class="hover:bg-blue-50 transition-all border-b border-gray-50">
+                        <td class="p-5 font-bold text-blue-700 border-l-4 border-transparent hover:border-blue-600">${stokKodu}</td>
+                        <td class="p-5 font-semibold text-gray-700">${stokTanimi}</td>
+                        <td class="p-5 text-gray-400 text-sm font-mono">${barkod}</td>
+                        <td class="p-5"><span class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-black border border-gray-200">${lokasyon}</span></td>
+                        <td class="p-5 text-sm font-medium text-gray-600">${marka}</td>
+                        <td class="p-5 font-black text-center text-lg ${parseInt(adet) > 0 ? 'text-green-600' : 'text-red-500'}">${adet}</td>
                     </tr>`;
             });
         }
