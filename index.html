@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Depo Envanter Sorgulama</title>
+    <title>Depo Envanter Sistemi</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -14,7 +14,8 @@
     <div class="max-w-7xl mx-auto">
         <div class="bg-white p-8 rounded-3xl shadow-lg border-b-4 border-blue-600 mb-8 text-center">
             <h1 class="text-3xl font-extrabold text-gray-800 mb-2">📦 Depo Envanter Sistemi</h1>
-            <div class="flex flex-col md:flex-row gap-3 max-w-3xl mx-auto mt-6">
+            <p class="text-gray-500 mb-6 text-sm">Hızlı sorgulama için stok kodu veya barkod giriniz.</p>
+            <div class="flex flex-col md:flex-row gap-3 max-w-3xl mx-auto">
                 <input type="text" id="searchInput" onkeyup="if(event.keyCode===13) search()" 
                        placeholder="Aramaya başlayın..." 
                        class="flex-1 border-2 border-gray-200 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all shadow-inner">
@@ -31,7 +32,7 @@
                             <th class="p-5">Stok Tanımı</th>
                             <th class="p-5">Barkod</th>
                             <th class="p-5">Lokasyon</th>
-                            <th class="p-5 text-blue-300 italic">Bölüm / Alan</th>
+                            <th class="p-5">Bölüm / Alan</th>
                             <th class="p-5">Marka</th>
                             <th class="p-5 text-center">Adet</th>
                         </tr>
@@ -47,10 +48,11 @@
     <script>
         let inventory = [];
 
+        // Veriyi çek
         fetch('data.json')
             .then(res => res.json())
             .then(data => { inventory = data; })
-            .catch(err => alert("Veri yüklenemedi!"));
+            .catch(err => console.error("Veri yüklenemedi!"));
 
         function search() {
             const query = document.getElementById('searchInput').value.trim().toLowerCase();
@@ -73,25 +75,23 @@
                     return key ? item[key] : null;
                 };
 
+                // Verileri akıllıca çek
                 const stokKodu = findVal("stok kodu") || findVal("kodu") || "-";
                 const stokTanimi = findVal("stok tanımı") || findVal("tanımı") || "-";
                 const barkod = findVal("barkod") || "-";
                 const lokasyon = findVal("lokasyon") || "-";
                 const marka = findVal("marka") || "-";
                 const adet = findVal("say.adet") || findVal("adet") || "0";
-                
-                // Bölüm ve Alan Verilerini Birleştiriyoruz
-                const bolum = findVal("bölüm adı") || findVal("bölüm") || "-";
-                const alan = findVal("alan adı") || findVal("alan") || "-";
-                const bolumAlan = `${bolum} / ${alan}`;
+                const bolum = findVal("bölüm") || "";
+                const alan = findVal("alan") || "";
 
                 table.innerHTML += `
-                    <tr class="hover:bg-blue-50 transition-all">
+                    <tr class="hover:bg-blue-50 transition-all border-b border-gray-50">
                         <td class="p-5 font-bold text-blue-700">${stokKodu}</td>
                         <td class="p-5 font-semibold text-gray-700">${stokTanimi}</td>
                         <td class="p-5 text-gray-400 text-sm font-mono">${barkod}</td>
                         <td class="p-5"><span class="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-black border border-gray-200">${lokasyon}</span></td>
-                        <td class="p-5 text-sm font-medium text-blue-500 uppercase tracking-tighter">${bolumAlan}</td>
+                        <td class="p-5 text-sm font-medium text-blue-500 italic">${bolum} / ${alan}</td>
                         <td class="p-5 text-sm font-medium text-gray-600">${marka}</td>
                         <td class="p-5 font-black text-center text-lg ${parseInt(adet) > 0 ? 'text-green-600' : 'text-red-500'}">${adet}</td>
                     </tr>`;
